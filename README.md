@@ -8,6 +8,7 @@ This will tell users how they can improve their password to reach the very stron
 The overall objective of the project is to increase the users cyber security awareness and basics by improving how secure their passwords are and how secure their accounts are. 
 
 Team Structure and Roles -
+
 Riley – Role - 
 
 Kieran – Role - 
