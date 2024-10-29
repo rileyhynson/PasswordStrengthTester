@@ -9,8 +9,11 @@ The overall objective of the project is to increase the users cyber security awa
 
 Team Structure and Roles -
 Riley – Role - 
+
 Kieran – Role - 
+
 Noorullah – Role - 
+
 Josh – Role - 
 
 # User Guide - How to Use the Program
