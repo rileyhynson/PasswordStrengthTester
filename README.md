@@ -37,7 +37,7 @@ The initial ideas of the program will be that the Password Strength Tester will 
 - Accept user input to put the password in 
 - Use TKinter UI 
 
-  # Software Design
+# Software Design
 The programming language chosen is Python.  
 
 The program will be contacting the ‘Have I Been Pwned’ password checking API to see if the password entered has been compromised. 
