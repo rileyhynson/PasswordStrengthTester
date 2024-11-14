@@ -9,13 +9,13 @@ The overall objective of the project is to increase the users cyber security awa
 
 Team Structure and Roles -
 
-Riley – Role - 
+Riley – Role – Design Implementation Programming Documentation 
 
-Kieran – Role - 
+Kieran – Role – Pseudocode Programming Documentation 
 
-Noorullah – Role - 
+Noorullah – Role – Testing Programming Documentation 
 
-Josh – Role - 
+Josh – Role – Analysis Programming Documentation 
 
 # User Guide - How to Use the Program
 
@@ -32,8 +32,23 @@ The initial ideas of the program will be that the Password Strength Tester will 
 - Strength indicator (weak, moderate, strong, very strong) 
 - Compare the password based on a list of compromised passwords and commonly used passwords 
 - Compare the strength of the password based on characters used and the length of the password 
-- Use the ‘Have I Been Pwned’ API 
+- Use the ‘Have I Been Pwned’ API to check if password is compromised 
 - Estimate the time it would take for a malicious attacker to guess the password 
-- Accept user input to put the password in
+- Accept user input to put the password in 
+- Use TKinter UI 
 
-  
+  # Software Design
+The programming language chosen is Python.  
+
+The program will be contacting the ‘Have I Been Pwned’ password checking API to see if the password entered has been compromised. 
+
+The program will use TKinter for UI. This will make it easier to use and more visually appealing. 
+
+The code is separated into functions. The functions are separated by their functionality, for example, the assessPasswordStrength function is strictly only for checking how strong the password is and the checkPwnedPassword function is strictly for checking if the password is compromised, then the data and information produced by these functions are combined into the UI to display the message to the user. 
+
+The architecture of the program can be split into four main parts and functions: 
+
+- Password Analysis (assessPasswordStrength) – Evaluates the strength of the password that was entered by the user based on the length, character types and the complexity of the password. 
+- Pwned Password Check (checkPwnedPassword) – Checks if the password is compromised by utilising the ‘Have I Been Pwned’ API to check the password against their database and their information. 
+- Password Feedback – Provides feedback based on the password analysis. Informs the user on how they can improve their password, for example add numbers or symbols. 
+- UI Setup (TKinter) - Responsible for handling the user’s input, starts the password analysis and displays the feedback in an interactive form that is easy to use. 
