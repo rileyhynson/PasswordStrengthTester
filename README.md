@@ -18,7 +18,7 @@ Noorullah – Role – Testing Programming Documentation
 Josh – Role – Analysis Programming Documentation 
 
 # User Guide - How to Use the Program
-see attached userguide.txt file for instructions on how to use the program correctly.
+see attached User Documentation for ICTPRG434_CSP.docx file for instructions on how to use the program correctly.
 
 # Problem Analysis
 The issue that is presented in the case study is that passwords could be guessable, meaning that the user’s accounts could be compromised. 
