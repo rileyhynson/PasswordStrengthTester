@@ -1,0 +1,120 @@
+# Function to evaluate password complexity
+function password_complexity(password):
+    length = length of password
+    has_upper = check if password contains uppercase letters
+    has_lower = check if password contains lowercase letters
+    has_digit = check if password contains digits
+    has_symbol = check if password contains symbols
+
+    initialize complexity_score to 0
+
+    # Length scoring
+    if length < 8:
+        return "Weak", complexity_score
+    else if length is between 8 and 12:
+        increase complexity_score by 1
+    else if length is between 12 and 16:
+        increase complexity_score by 2
+    else:
+        increase complexity_score by 3
+
+    # Character type scoring
+    if has_upper:
+        increase complexity_score by 1
+    if has_lower:
+        increase complexity_score by 1
+    if has_digit:
+        increase complexity_score by 1
+    if has_symbol:
+        increase complexity_score by 1
+
+    # Password strength rating
+    if complexity_score <= 2:
+        return "Weak", complexity_score
+    else if complexity_score <= 4:
+        return "Moderate", complexity_score
+    else if complexity_score <= 6:
+        return "Strong", complexity_score
+    else:
+        return "Very Strong", complexity_score
+
+# Function to estimate password cracking time
+function estimate_crack_time(password, complexity_score):
+    initialize keyspace to 0
+
+    # Keyspace calculation based on character types
+    if password contains uppercase letters:
+        add 26 to keyspace
+    if password contains lowercase letters:
+        add 26 to keyspace
+    if password contains digits:
+        add 10 to keyspace
+    if password contains symbols:
+        add 32 to keyspace
+
+    keyspace_size = keyspace raised to the power of the length of the password
+
+    # Define attack speeds
+    online_attack_speed = 1000 guesses per second
+    offline_attack_speed = 1 billion guesses per second
+
+    # Calculate crack times
+    online_crack_time_seconds = keyspace_size / online_attack_speed
+    offline_crack_time_seconds = keyspace_size / offline_attack_speed
+
+    return online_crack_time_seconds, offline_crack_time_seconds
+
+# Function to format time in a human-readable way
+function format_time(seconds):
+    if seconds < 60:
+        return seconds as "seconds"
+    else if seconds < 3600:
+        return seconds converted to "minutes"
+    else if seconds < 86400:
+        return seconds converted to "hours"
+    else if seconds < 31536000:
+        return seconds converted to "days"
+    else:
+        return seconds converted to "years"
+
+# Function to check password against Have I Been Pwned API
+function check_password_pwned(password):
+    sha1_password = hash password with SHA-1
+    prefix = first 5 characters of sha1_password
+    suffix = remaining characters of sha1_password
+
+    # Query Have I Been Pwned API
+    try to get response from HIBP API with prefix:
+        if response is successful:
+            split response text by lines
+            for each line in response:
+                split line into hash_suffix and count
+                if hash_suffix matches suffix:
+                    return True, count
+            return False, 0
+    if error in request:
+        print error message
+        return False, 0
+
+# Main function to test password
+function password_strength_tester(password):
+    # Check password complexity
+    strength, complexity_score = password_complexity(password)
+    print "Password strength:", strength
+
+    # Estimate cracking time
+    online_time, offline_time = estimate_crack_time(password, complexity_score)
+    print "Estimated online attack crack time:", format_time(online_time)
+    print "Estimated offline attack crack time:", format_time(offline_time)
+
+    # Check if password has been pwned
+    pwned, count = check_password_pwned(password)
+    if pwned:
+        print "Warning: This password has been found in", count, "breaches."
+    else:
+        print "This password has not been found in known breaches."
+
+# Run Password Strength Tester
+if main:
+    password = get input from user
+    call password_strength_tester with password
