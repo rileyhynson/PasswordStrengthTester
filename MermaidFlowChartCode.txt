@@ -1,0 +1,27 @@
+graph TD
+    A[Start] --> B[UI Startup]
+    B --> C[User Enters Their Password]
+    C --> D{Is Password File Loaded?}
+    D -->|No| E[Prompt User to Select File]
+    E --> F[Load Common Passwords]
+    D -->|Yes| G[Check Pwned Password]
+    F --> G
+    G --> H{Pwned Count > 0?}
+    H -->|Yes| I[Mark Password as Very Weak]
+    I --> J[Display Compromised Message]
+    H -->|No| K[Assess Password Strength]
+    K --> L[Calculate Entropy]
+    L --> M{Entropy Level}
+    M -->|Very Weak| N[Set Strength: Very Weak, Crack Time: Minutes]
+    M -->|Weak| O[Set Strength: Weak, Crack Time: Months]
+    M -->|Moderate| P[Set Strength: Moderate, Crack Time: Years]
+    M -->|Strong| Q[Set Strength: Strong, Crack Time: Decades]
+    M -->|Very Strong| R[Set Strength: Very Strong, Crack Time: Centuries]
+    R --> S[Check for Feedback]
+    S --> T[Display Feedback & Result]
+    N --> T
+    O --> T
+    P --> T
+    Q --> T
+    J --> T
+    T --> U[End]
