@@ -1,153 +1,138 @@
-## PASSWORD STRENGTH TESTER - PROJECT
+# loading libraries, etc
 import tkinter as tk
+from tkinter import filedialog, messagebox
 import hashlib
 import requests
 import string
+import os
 
-## list of commonly used passwords (small but can easily be added to, this is more for an example to show it works)
-COMMON_PASSWORDS = {
-    "passwords", "123456", "123456789", "12345678", "12345",
-    "111111", "1234567", "sunshine", "qwerty", "iloveyou",
-    "princess", "admin", "welcome", "666666", "abc123",
-    "football", "123123", "monkey", "654321", "!@#$%^&*",
-    "charlie", "aa123456", "donald", "password1", "qwerty123"
-}
-
-## function to check if password has been pwned through the api
-def checkPwnedPassword(password):
-    sha1Hash = hashlib.sha1(password.encode('utf-8')).hexdigest().upper()
-    prefix = sha1Hash[:5]
-    suffix = sha1Hash[5:]
-    url = f"https://api.pwnedpasswords.com/range/{prefix}" ## api link
+# function to load common passwords
+def load_common_passwords(file_path):
     try:
-        response = requests.get(url, timeout=5)
-        if response.status_code == 200: ## check the result from contacting api
+        with open(file_path, 'r') as file:
+            return set(file.read().splitlines())
+    except Exception as e:
+        messagebox.showerror("Error", f"Could not load file: {e}")
+        return set()
+
+# check if the password is pwned by accessing the api
+def check_pwned_password(password):
+    sha1_hash = hashlib.sha1(password.encode('utf-8')).hexdigest().upper()
+    prefix, suffix = sha1_hash[:5], sha1_hash[5:]
+    url = f"https://api.pwnedpasswords.com/range/{prefix}" # url for api
+    try:
+        response = requests.get(url, timeout=5) # getting response
+        if response.status_code == 200:
             hashes = (line.split(':') for line in response.text.splitlines())
-            for hashSuffix, count in hashes:
-                if hashSuffix == suffix:
+            for hash_suffix, count in hashes:
+                if hash_suffix == suffix:
                     return int(count)
-    except requests.RequestException:
-        ## if internet error, pwnedCount will have to be 0 - no access to the api
-        pass
+    except requests.RequestException: # err
+        result_label.config(text="Error: Could not complete breach check. Check your internet connection.")
+        return -1
     return 0
 
-## function to assess strength
-def assessPasswordStrength(password):
-    strength = "Weak" ## default strength
+# function to check strength
+def assess_password_strength(password):
+    strength = "Weak" # default values
     feedback = []
-    estimatedTime = "Instantly" ## default estimated crack time
+    estimated_time = "Instantly"
 
-    ## check if the password is in common list
-    if password.lower() in COMMON_PASSWORDS:
-        return "Very Weak", "Instantly", "Password is too common" ## if password is in the table of common passwords then it must be weak
+    if password.lower() in COMMON_PASSWORDS: # if its common its easy to guess
+        return "Very Weak", "Instantly", "Password is too common"
 
-    ## check for minimum password length
-    length = len(password) ## checking length of entered password
-    if length < 8: ## if the length is not 8 characters then it is not long enough to be checked
-        feedback.append("Password is too short (need 8 characters)")
-    elif 8 <= length <= 10: ## if the password is between 8 and 10 characters then it is suggested to add more characters
-        feedback.append("Try using more characters for a stronger password")
-    else:
-        feedback.append("Good length for a strong password") ## if it is longer than 10 characters then it is a good length
+    length = len(password)
+    if length < 8: # too short
+        feedback.append("Password is too short (min 8 characters)")
+    elif length <= 10: # long enough but could be better by adding more chars
+        feedback.append("Try using more characters")
+    else: # meets length recommendation
+        feedback.append("Good length")
 
-    ## checking if password has any of these
-    hasUpper = any(c.isupper() for c in password) ## checking for uppercase
-    hasLower = any(c.islower() for c in password) ## checking for lowercase
-    hasDigit = any(c.isdigit() for c in password) ## checking for numbers
-    hasSymbol = any(c in string.punctuation for c in password) ## checking for special characters like ! ? $
+    has_upper = any(c.isupper() for c in password) # check for uppercase
+    has_lower = any(c.islower() for c in password) # check for lowercase
+    has_digit = any(c.isdigit() for c in password) # check for numbers
+    has_symbol = any(c in string.punctuation for c in password) # check for symbols
 
-    ## feedback for missing character types
-    if not hasUpper: ## if it doesnt have uppercase letters then suggests for you to add some
-        feedback.append("Add uppercase letters")
-    if not hasLower:  ## if it doesnt have lowercase letters then suggests for you to add some
-        feedback.append("Add lowercase letters")
-    if not hasDigit:  ## if it doesnt have numbers letters then suggests for you to add some
-        feedback.append("Add numbers")
-    if not hasSymbol:  ## if it doesnt have symbols or special characters then suggests for you to add some
-        feedback.append("Add symbols (!, @, #)")
+    if not has_upper: feedback.append("Add uppercase letters") # add uppercase
+    if not has_lower: feedback.append("Add lowercase letters") # add lowercase
+    if not has_digit: feedback.append("Add numbers") # add numbers
+    if not has_symbol: feedback.append("Add symbols (!, @, #)") # add symbols
 
-    ## calc entropy based on character types and length - like a score for the password
-    keyspace = 0
-    if hasLower: ## if hasLower is true then add 26 to keyspace 
-        keyspace += 26
-    if hasUpper: ## if hasUpper is true then add 26 to keyspace
-        keyspace += 26
-    if hasDigit: ## if hasDigit is true then add 10 to keyspace
-        keyspace += 10
-    if hasSymbol: 
-        keyspace += len(string.punctuation)
-
-    ## calculation for cracking time
+    # calc entropy
+    keyspace = sum([26 for x in [has_upper, has_lower] if x] + 
+                   [10 for x in [has_digit] if x] + 
+                   [len(string.punctuation) for x in [has_symbol] if x])
     entropy = (keyspace ** length) if keyspace > 0 else 0
 
-    ## cracking time estimates based on entropy
     if entropy > 10**15:
-        estimatedTime = "Centuries"
-        strength = "Very Strong"
+        strength, estimated_time = "Very Strong", "Centuries"
     elif entropy > 10**12:
-        estimatedTime = "Decades"
-        strength = "Strong"
+        strength, estimated_time = "Strong", "Decades"
     elif entropy > 10**9:
-        estimatedTime = "Years"
-        strength = "Moderate"
+        strength, estimated_time = "Moderate", "Years"
     elif entropy > 10**6:
-        estimatedTime = "Months"
-        strength = "Weak"
+        strength, estimated_time = "Weak", "Months"
     else:
-        estimatedTime = "Minutes or less"
-        strength = "Very Weak"
+        strength, estimated_time = "Very Weak", "Minutes or less"
 
-    ## check for patterns in the password
-    if any(password == c * length for c in set(password)) or password.lower() in ["123456", "abcdef", "qwerty"]: ## can add more sequences here if needed
-        feedback.append("Avoid repeating characters or sequences like 1234")
+    if any(password == c * length for c in set(password)): # repeating chars
+        feedback.append("Avoid repeating characters")
+    if password.lower() in {"abcdef", "qwerty", "123456"}: # sequence
+        feedback.append("Avoid sequences") 
 
-    ## very strong strength based on passing all checks
-    if length >= 12 and hasUpper and hasLower and hasDigit and hasSymbol: ## if the password has over 12 characters, has uppercase, lowercase, numbers and symbols then it is a very strong password
-        strength = "Very Strong"
-        estimatedTime = "Centuries"
+    if length >= 12 and all([has_upper, has_lower, has_digit, has_symbol]): # if pw is long and has met all criteria
         feedback.append("Password is very strong!")
 
-    ## feedback string
-    feedbackText = "\n".join(feedback) if feedback else "Good password complexity"
+    return strength, estimated_time, "\n".join(feedback) or "Good password complexity"
 
-    return strength, estimatedTime, feedbackText ## return the stength, time and feedback for it to be placed into the strings on the UI
+# function to check the password
+def analyze_password():
+    global COMMON_PASSWORDS
+    password = entry.get() # password to check is the entry by the user
+    pwned_count = check_pwned_password(password) # no of times its been pwned
+    if pwned_count == -1:
+        return
 
-## function to check password
-def analysePassword():
-    password = entry.get()
-    pwnedCount = checkPwnedPassword(password) ## get the result from the function checkin if password has been pwned
+    strength, time_to_crack, feedback_text = assess_password_strength(password)
+    if pwned_count > 0: # if pwned count is more than 1 then its easy to crack
+        strength, time_to_crack = "Very Weak", "Instantly"
+        feedback_text = f"Password is compromised! Found {pwned_count} times." # shows how many times its been pwned
 
-    ## strength check
-    strength, timeToCrack, feedbackText = assessPasswordStrength(password) ## getting the text for the ui from what the function returns
+    result_label.config(text=f"Pwned {pwned_count} times\nStrength: {strength}\n"
+                             f"Estimated Time to Crack: {time_to_crack}\n\nFeedback:\n{feedback_text}")
 
-    ## password compromised = strength very weak
-    if pwnedCount > 0: ## if the password has been compromised it cannot be a safe password therefore it is very weak
-        strength = "Very Weak"
-        timeToCrack = "Instantly"
-        feedbackText = f"Password is compromised! It has been pwned {pwnedCount} times. Choose a stronger password" ## shows the number of time it has been compromised
+# the function that lets you pick the file to load passwords from
+def select_file():
+    global COMMON_PASSWORDS
+    file_path = filedialog.askopenfilename(
+        title="Select Common Passwords File",
+        filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")]
+    )
+    if file_path:
+        COMMON_PASSWORDS = load_common_passwords(file_path)
+        file_label.config(text=f"Loaded file: {os.path.basename(file_path)}")
 
-    ## show pwned count - strength assessment - estimated time to crack - password feedback
-    resultLabel.config(text=f"Pwned {pwnedCount} times\nStrength: {strength}\nEstimated Time to Crack: {timeToCrack}\n\nFeedback:\n{feedbackText}")
-
-## ui setup
+# UI Setup with buttons, etc
 root = tk.Tk()
-root.title("Password Strength Tester - 22603VIC")
-
-## ui layout
-root.geometry("500x300")
-root.resizable(True, True)
+root.title("Password Strength Tester")
+root.geometry("600x400")
 
 tk.Label(root, text="Enter Password:", font=("Arial", 12)).grid(row=0, column=0, padx=10, pady=20, sticky='e')
 entry = tk.Entry(root, width=30, show="*", font=("Arial", 12))
 entry.grid(row=0, column=1, padx=10, pady=20)
 
-analyzeButton = tk.Button(root, text="Analyse", command=analysePassword, font=("Arial", 12))
-analyzeButton.grid(row=1, column=0, columnspan=2, pady=10)
+analyze_button = tk.Button(root, text="Analyze", command=analyze_password, font=("Arial", 12))
+analyze_button.grid(row=1, column=0, columnspan=2, pady=10)
 
-resultLabel = tk.Label(root, text="Strength: \nEstimated Time to Crack: ", font=("Arial", 12), justify='left')
-resultLabel.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky='w')
+file_button = tk.Button(root, text="Select Password File", command=select_file, font=("Arial", 12))
+file_button.grid(row=2, column=0, pady=10, sticky='e')
+file_label = tk.Label(root, text="No file selected", font=("Arial", 10), fg="blue")
+file_label.grid(row=2, column=1, padx=10, sticky='w')
 
-feedbackLabel = tk.Label(root, text="", font=("Arial", 10), justify='left', fg="blue")
-feedbackLabel.grid(row=3, column=0, columnspan=2, padx=10, pady=10, sticky='w')
+result_label = tk.Label(root, text="Strength: \nEstimated Time to Crack: ", font=("Arial", 12), justify='left')
+result_label.grid(row=3, column=0, columnspan=2, padx=10, pady=10, sticky='w')
+
+COMMON_PASSWORDS = set()
 
 root.mainloop()
